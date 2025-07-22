@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
+import { normalizeBrandName } from '../utils/brandNormalization'
 
 export const useBrandAggregation = (currentResult, similarPreviousResults, brand) => {
   // Brand aggregation logic for when no specific brand is provided
   const brandAggregation = useMemo(() => {
     // Return null if no data to process (no current results and no similar previous results)
-    if ((!currentResult && (!similarPreviousResults || similarPreviousResults.length === 0)) || brand.trim()) return null
+    // Also return null if a specific brand is provided (we'll show brand focus analysis instead)
+    if ((!currentResult && (!similarPreviousResults || similarPreviousResults.length === 0)) || normalizeBrandName(brand)) return null
 
     const brandCounts = {}
     const brandDetails = {}

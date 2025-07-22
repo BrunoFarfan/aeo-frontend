@@ -78,7 +78,7 @@ function ResultsDisplay({
                               </Box>
                               <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
                                 <Typography variant="body2" color="text.secondary">
-                                  Sentimiento: {item.sentiment}
+                                  Sentimiento: {(item.sentiment * 100).toFixed(1)}%
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
                                   Enlaces: {item.link_count}
@@ -160,7 +160,7 @@ function ResultsDisplay({
                               </Box>
                               <Box sx={{ display: 'flex', gap: 1, mt: 0.5, ml: 3 }}>
                                 <Typography variant="caption" color="text.secondary">
-                                  Valoración (-1 a 1): {item.sentiment}
+                                  Sentimiento: {(item.sentiment * 100).toFixed(1)}%
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary">
                                   Links: {item.link_count}

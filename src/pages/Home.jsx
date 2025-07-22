@@ -11,6 +11,7 @@ import { useBrandAggregation } from '../hooks/useBrandAggregation'
 import QueryForm from '../components/QueryForm'
 import ResultsDisplay from '../components/ResultsDisplay'
 import BrandAggregation from '../components/BrandAggregation'
+import BrandFocusAnalysis from '../components/BrandFocusAnalysis'
 
 function Home() {
   const [question, setQuestion] = useState('')
@@ -131,14 +132,23 @@ function Home() {
             />
           )}
 
-          {/* Brand Aggregation Analysis */}
-          {brandAggregation && similarPreviousResults && similarPreviousResults.length > 0 && (
+          {/* Brand Aggregation Analysis - Only show when no specific brand is provided */}
+          {brandAggregation && similarPreviousResults && similarPreviousResults.length > 0 && !brand.trim() && (
             <BrandAggregation
               brandAggregation={brandAggregation}
               chartData={chartData}
               activeTab={activeTab}
               onTabChange={handleTabChange}
               searchSimilarQuestions={searchSimilarQuestions}
+            />
+          )}
+
+          {/* Brand Focus Analysis */}
+          {brand && brand.trim() && (currentResult || (similarPreviousResults && similarPreviousResults.length > 0)) && (
+            <BrandFocusAnalysis
+              currentResult={currentResult}
+              similarPreviousResults={similarPreviousResults}
+              brand={brand}
             />
           )}
         </Paper>

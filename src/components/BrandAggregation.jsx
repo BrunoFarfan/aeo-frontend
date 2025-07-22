@@ -161,7 +161,7 @@ function BrandAggregation({ brandAggregation, chartData, activeTab, onTabChange,
                                 {avgPosition.toFixed(1)}
                               </Box>
                             </TableCell>
-                            <TableCell>{avgSentiment.toFixed(2)}</TableCell>
+                            <TableCell>{(avgSentiment * 100).toFixed(1)}%</TableCell>
                             <TableCell>{totalLinks}</TableCell>
                           </TableRow>
                         ))}
@@ -235,7 +235,7 @@ function BrandAggregation({ brandAggregation, chartData, activeTab, onTabChange,
                               </Box>
                             </TableCell>
                             <TableCell>{count}</TableCell>
-                            <TableCell>{avgSentiment.toFixed(2)}</TableCell>
+                            <TableCell>{(avgSentiment * 100).toFixed(1)}%</TableCell>
                             <TableCell>{totalLinks}</TableCell>
                             <TableCell>{questionsCount}</TableCell>
                           </TableRow>
