@@ -19,6 +19,7 @@ function Home() {
   const [currentResult, setCurrentResult] = useState(null)
   const [similarPreviousResults, setSimilarPreviousResults] = useState([])
   const [error, setError] = useState('')
+  const [infoMessage, setInfoMessage] = useState('')
   const [activeTab, setActiveTab] = useState(0)
   const [activeResultsTab, setActiveResultsTab] = useState(0)
   const [searchSimilarQuestions, setSearchSimilarQuestions] = useState(false)
@@ -38,6 +39,7 @@ function Home() {
     e.preventDefault()
     setIsSubmitting(true)
     setError('')
+    setInfoMessage('')
     setCurrentResult(null)
     setSimilarPreviousResults([])
     
@@ -48,6 +50,11 @@ function Home() {
         setSimilarPreviousResults(result.similar_previous_results)
         // Automatically switch to previous results tab when only searching similar questions
         setActiveResultsTab(0)
+        
+        // Show message if no similar questions found but request was successful
+        if (!result.similar_previous_results || result.similar_previous_results.length === 0) {
+          setInfoMessage('No se encontraron preguntas similares en el historial. Intenta con una pregunta diferente o desactiva la búsqueda de preguntas similares.')
+        }
       } else {
         // Make the full deep query
         const result = await deepQuery(question, brand)
@@ -55,7 +62,12 @@ function Home() {
         setSimilarPreviousResults(result.similar_previous_results)
       }
     } catch (err) {
-      setError('Error al procesar la pregunta. Por favor, intenta de nuevo.')
+      // Handle specific 404 error for similar questions
+      if (searchSimilarQuestions && err.message && err.message.includes('404')) {
+        setError('No se encontraron preguntas similares en el historial. Intenta con una pregunta diferente o desactiva la búsqueda de preguntas similares.')
+      } else {
+        setError('Error al procesar la pregunta. Por favor, intenta de nuevo.')
+      }
       console.error('Error submitting form:', err)
     } finally {
       setIsSubmitting(false)
@@ -101,6 +113,13 @@ function Home() {
             </Alert>
           )}
 
+          {/* Info Message Display */}
+          {infoMessage && (
+            <Alert severity="info" sx={{ mt: 3 }}>
+              {infoMessage}
+            </Alert>
+          )}
+
           {/* Results Display */}
           {(currentResult || (similarPreviousResults && similarPreviousResults.length > 0)) && (
             <ResultsDisplay
@@ -113,7 +132,7 @@ function Home() {
           )}
 
           {/* Brand Aggregation Analysis */}
-          {brandAggregation && (
+          {brandAggregation && similarPreviousResults && similarPreviousResults.length > 0 && (
             <BrandAggregation
               brandAggregation={brandAggregation}
               chartData={chartData}
