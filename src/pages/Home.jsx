@@ -2,15 +2,15 @@ import { useState } from 'react'
 import { 
   Box, 
   Container, 
-  Typography, 
-  TextField, 
-  Button, 
   Paper,
-  CircularProgress,
   Alert
 } from '@mui/material'
-import { QuestionAnswer, Send } from '@mui/icons-material'
 import { deepQuery } from '../hooks/useDeepQuery'
+import { similarQuestions } from '../hooks/useSimilarQuestions'
+import { useBrandAggregation } from '../hooks/useBrandAggregation'
+import QueryForm from '../components/QueryForm'
+import ResultsDisplay from '../components/ResultsDisplay'
+import BrandAggregation from '../components/BrandAggregation'
 
 function Home() {
   const [question, setQuestion] = useState('')
@@ -19,6 +19,20 @@ function Home() {
   const [currentResult, setCurrentResult] = useState(null)
   const [similarPreviousResults, setSimilarPreviousResults] = useState([])
   const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState(0)
+  const [activeResultsTab, setActiveResultsTab] = useState(0)
+  const [searchSimilarQuestions, setSearchSimilarQuestions] = useState(false)
+
+  // Use custom hook for brand aggregation
+  const { brandAggregation, chartData } = useBrandAggregation(currentResult, similarPreviousResults, brand)
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue)
+  }
+
+  const handleResultsTabChange = (event, newValue) => {
+    setActiveResultsTab(newValue)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -28,9 +42,18 @@ function Home() {
     setSimilarPreviousResults([])
     
     try {
-      const result = await deepQuery(question, brand)
-      setCurrentResult(result.current_result)
-      setSimilarPreviousResults(result.similar_previous_results)
+      if (searchSimilarQuestions) {
+        // Only search for similar questions without making the actual query
+        const result = await similarQuestions(question, brand)
+        setSimilarPreviousResults(result.similar_previous_results)
+        // Automatically switch to previous results tab when only searching similar questions
+        setActiveResultsTab(0)
+      } else {
+        // Make the full deep query
+        const result = await deepQuery(question, brand)
+        setCurrentResult(result.current_result)
+        setSimilarPreviousResults(result.similar_previous_results)
+      }
     } catch (err) {
       setError('Error al procesar la pregunta. Por favor, intenta de nuevo.')
       console.error('Error submitting form:', err)
@@ -59,79 +82,17 @@ function Home() {
             bgcolor: 'white'
           }}
         >
-          {/* Header */}
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <QuestionAnswer 
-              sx={{ 
-                fontSize: 48, 
-                color: 'primary.main',
-                mb: 2
-              }} 
-            />
-            <Typography 
-              variant="h4" 
-              component="h1" 
-              gutterBottom
-              sx={{ fontWeight: 600 }}
-            >
-              Haz Tu Pregunta
-            </Typography>
-            <Typography 
-              variant="body1" 
-              color="text.secondary"
-            >
-              Obtén análisis de AEO de tu marca
-            </Typography>
-          </Box>
-
-          {/* Form */}
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Tu Pregunta"
-              variant="outlined"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              required
-              sx={{ mb: 3 }}
-              placeholder="¿Qué te gustaría saber?"
-            />
-
-            <TextField
-              fullWidth
-              label="Marca para analizar (Opcional)"
-              variant="outlined"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              sx={{ mb: 4 }}
-              placeholder="Ingresa el nombre de la marca..."
-            />
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              size="large"
-              disabled={isSubmitting || !question.trim()}
-              startIcon={
-                isSubmitting ? (
-                  <CircularProgress size={20} color="inherit" />
-                ) : (
-                  <Send />
-                )
-              }
-              sx={{
-                py: 1.5,
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 600
-              }}
-            >
-              {isSubmitting ? 'Procesando...' : 'Hacer Pregunta'}
-            </Button>
-          </Box>
+          {/* Query Form */}
+          <QueryForm
+            question={question}
+            setQuestion={setQuestion}
+            brand={brand}
+            setBrand={setBrand}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit}
+            searchSimilarQuestions={searchSimilarQuestions}
+            setSearchSimilarQuestions={setSearchSimilarQuestions}
+          />
 
           {/* Error Display */}
           {error && (
@@ -141,107 +102,25 @@ function Home() {
           )}
 
           {/* Results Display */}
-          {currentResult && (
-            <Box sx={{ mt: 4 }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Resultados de IA
-              </Typography>
-              {typeof currentResult === 'object' ? (
-                Object.entries(currentResult).map(([model, response]) => (
-                  <Paper key={model} sx={{ p: 3, mb: 2, bgcolor: 'grey.50' }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1, textTransform: 'capitalize' }}>
-                      {model}
-                    </Typography>
-                    {Array.isArray(response) && response.length > 0 ? (
-                      response.map((item, index) => (
-                        <Box key={index} sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1 }}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                            {item.brand}
-                          </Typography>
-                          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Posición: {item.position}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Sentimiento: {item.sentiment}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Enlaces: {item.link_count}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      ))
-                    ) : (
-                      <Typography variant="body1" color="text.secondary">
-                        No hay resultados disponibles
-                      </Typography>
-                    )}
-                  </Paper>
-                ))
-              ) : (
-                <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
-                  <Typography variant="body1">
-                    {currentResult}
-                  </Typography>
-                </Paper>
-              )}
-            </Box>
+          {(currentResult || (similarPreviousResults && similarPreviousResults.length > 0)) && (
+            <ResultsDisplay
+              currentResult={currentResult}
+              similarPreviousResults={similarPreviousResults}
+              activeResultsTab={activeResultsTab}
+              onResultsTabChange={handleResultsTabChange}
+              searchSimilarQuestions={searchSimilarQuestions}
+            />
           )}
 
-          {/* Similar Previous Results */}
-          {similarPreviousResults && similarPreviousResults.length > 0 && (
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Resultados Similares Anteriores
-              </Typography>
-              {similarPreviousResults.map((result, index) => (
-                <Paper key={index} sx={{ p: 3, mb: 2, bgcolor: 'grey.50' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
-                    Pregunta: {result.question}
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                    Similitud: {(result.similarity_score * 100).toFixed(1)}%
-                  </Typography>
-                  {result.processed_responses && typeof result.processed_responses === 'object' ? (
-                    Object.entries(result.processed_responses).map(([model, response]) => (
-                      <Box key={model} sx={{ mb: 2 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, textTransform: 'capitalize' }}>
-                          {model}
-                        </Typography>
-                        {Array.isArray(response) && response.length > 0 ? (
-                          response.map((item, itemIndex) => (
-                            <Box key={itemIndex} sx={{ mb: 1, p: 1, bgcolor: 'white', borderRadius: 1 }}>
-                              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                {item.brand}
-                              </Typography>
-                              <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                                <Typography variant="caption" color="text.secondary">
-                                  Pos: {item.position}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  Sent: {item.sentiment}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  Links: {item.link_count}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          ))
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            No hay resultados
-                          </Typography>
-                        )}
-                      </Box>
-                    ))
-                  ) : (
-                    <Typography variant="body1">
-                      {result}
-                    </Typography>
-                  )}
-                </Paper>
-              ))}
-            </Box>
+          {/* Brand Aggregation Analysis */}
+          {brandAggregation && (
+            <BrandAggregation
+              brandAggregation={brandAggregation}
+              chartData={chartData}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              searchSimilarQuestions={searchSimilarQuestions}
+            />
           )}
         </Paper>
       </Container>
