@@ -11,7 +11,6 @@ import { useBrandAggregation } from '../hooks/useBrandAggregation'
 import QueryForm from '../components/QueryForm'
 import ResultsDisplay from '../components/ResultsDisplay'
 import BrandAggregation from '../components/BrandAggregation'
-import BrandFocusAnalysis from '../components/BrandFocusAnalysis'
 
 function Home() {
   const [question, setQuestion] = useState('')
@@ -49,8 +48,8 @@ function Home() {
         // Only search for similar questions without making the actual query
         const result = await similarQuestions(question, brand)
         setSimilarPreviousResults(result.similar_previous_results)
-        // Automatically switch to previous results tab when only searching similar questions
-        setActiveResultsTab(0)
+        // Automatically switch to focused analysis tab when brand is provided, otherwise previous results
+        setActiveResultsTab(brand && brand.trim() ? 1 : 0)
         
         // Show message if no similar questions found but request was successful
         if (!result.similar_previous_results || result.similar_previous_results.length === 0) {
@@ -80,19 +79,21 @@ function Home() {
       sx={{
         minHeight: '100vh',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
         bgcolor: 'grey.50',
         py: 4
       }}
     >
-      <Container maxWidth="sm">
+      <Container maxWidth="lg">
         <Paper
           elevation={2}
           sx={{
             p: 4,
             borderRadius: 2,
-            bgcolor: 'white'
+            bgcolor: 'white',
+            width: '100%',
+            maxWidth: '1200px'
           }}
         >
           {/* Query Form */}
@@ -129,6 +130,7 @@ function Home() {
               activeResultsTab={activeResultsTab}
               onResultsTabChange={handleResultsTabChange}
               searchSimilarQuestions={searchSimilarQuestions}
+              brand={brand}
             />
           )}
 
@@ -143,14 +145,7 @@ function Home() {
             />
           )}
 
-          {/* Brand Focus Analysis */}
-          {brand && brand.trim() && (currentResult || (similarPreviousResults && similarPreviousResults.length > 0)) && (
-            <BrandFocusAnalysis
-              currentResult={currentResult}
-              similarPreviousResults={similarPreviousResults}
-              brand={brand}
-            />
-          )}
+
         </Paper>
       </Container>
     </Box>

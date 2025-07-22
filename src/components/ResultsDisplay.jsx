@@ -5,13 +5,15 @@ import {
   Tabs,
   Tab
 } from '@mui/material'
+import BrandFocusAnalysis from './BrandFocusAnalysis'
 
 function ResultsDisplay({ 
   currentResult, 
   similarPreviousResults, 
   activeResultsTab, 
   onResultsTabChange,
-  searchSimilarQuestions = false
+  searchSimilarQuestions = false,
+  brand = ''
 }) {
   return (
     <Box sx={{ mt: 4 }}>
@@ -27,11 +29,12 @@ function ResultsDisplay({
         >
           {!searchSimilarQuestions && <Tab label="Resultados Actuales" />}
           <Tab label="Resultados Anteriores" />
+          {brand && brand.trim() && <Tab label="Análisis Enfocado" />}
         </Tabs>
 
         {/* Current Results Tab */}
         {activeResultsTab === 0 && !searchSimilarQuestions && currentResult && (
-          <Box sx={{ p: 3 }}>
+          <Box sx={{ p: 3, maxHeight: '600px', overflow: 'auto' }}>
             {typeof currentResult === 'object' ? (
               Object.entries(currentResult).map(([model, response]) => (
                 <Paper key={model} sx={{ p: 3, mb: 2, bgcolor: 'white' }}>
@@ -104,15 +107,15 @@ function ResultsDisplay({
         )}
 
         {/* Previous Results Tab */}
-        {(activeResultsTab === 1 || (searchSimilarQuestions && activeResultsTab === 0)) && similarPreviousResults && similarPreviousResults.length > 0 && (
-          <Box sx={{ p: 3, maxHeight: '400px', overflow: 'auto' }}>
+        {((!searchSimilarQuestions && activeResultsTab === 1) || (searchSimilarQuestions && activeResultsTab === 0)) && similarPreviousResults && similarPreviousResults.length > 0 && (
+          <Box sx={{ p: 3, maxHeight: '600px', overflow: 'auto' }}>
             {similarPreviousResults.map((result, index) => (
               <Paper key={index} sx={{ p: 3, mb: 2, bgcolor: 'white' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: 'primary.main' }}>
                   Pregunta: {result.question}
                 </Typography>
                 <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                  Similitud: {(result.similarity_score * 100).toFixed(1)}%
+                  Similitud pregunta: {(result.similarity_score * 100).toFixed(1)}%
                 </Typography>
                 {result.processed_responses && typeof result.processed_responses === 'object' ? (
                   Object.entries(result.processed_responses).map(([model, response]) => (
@@ -182,6 +185,17 @@ function ResultsDisplay({
                 )}
               </Paper>
             ))}
+          </Box>
+        )}
+
+        {/* Focused Analysis Tab */}
+        {brand && brand.trim() && ((!searchSimilarQuestions && activeResultsTab === 2) || (searchSimilarQuestions && activeResultsTab === 1)) && (
+          <Box sx={{ p: 3, maxHeight: '600px', overflow: 'auto' }}>
+            <BrandFocusAnalysis
+              currentResult={searchSimilarQuestions ? null : currentResult}
+              similarPreviousResults={similarPreviousResults}
+              brand={brand}
+            />
           </Box>
         )}
       </Paper>

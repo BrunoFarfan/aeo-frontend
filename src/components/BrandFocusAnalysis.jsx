@@ -153,7 +153,7 @@ function BrandFocusAnalysis({ currentResult, similarPreviousResults, brand }) {
   }))
 
   // Historical trend data (if multiple historical entries)
-  const historicalTrendData = historicalBrandData.length > 1 
+  const historicalTrendData = historicalBrandData.length > 0 
     ? historicalBrandData
         .sort((a, b) => a.similarity - b.similarity)
         .map((item, index) => ({
@@ -163,6 +163,8 @@ function BrandFocusAnalysis({ currentResult, similarPreviousResults, brand }) {
           similarity: (item.similarity * 100).toFixed(1)
         }))
     : []
+
+
 
   // Model comparison data for charts
   const modelComparisonData = Object.keys(historicalModelStats).map(model => ({
@@ -418,7 +420,7 @@ function BrandFocusAnalysis({ currentResult, similarPreviousResults, brand }) {
           )}
 
           {/* Historical Trend Chart */}
-          {historicalTrendData.length > 1 && (
+          {historicalTrendData.length > 0 && (
             <Box sx={{ mt: 3 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                 Tendencia Histórica
@@ -427,10 +429,39 @@ function BrandFocusAnalysis({ currentResult, similarPreviousResults, brand }) {
                 <LineChart data={historicalTrendData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="index" />
-                  <YAxis />
+                  <YAxis 
+                    yAxisId="left" 
+                    domain={[1, 5]} 
+                    reversed={true}
+                    label={{ value: 'Posición', angle: -90, position: 'center', offset: 10 }}
+                    tick={{ fontSize: 12 }}
+                    width={70}
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right" 
+                    domain={[0, 1]} 
+                    label={{ value: 'Sentimiento', angle: 90, position: 'center', offset: 10 }}
+                    tick={{ fontSize: 12 }}
+                    width={90}
+                  />
                   <Tooltip />
-                  <Line type="monotone" dataKey="position" stroke="#8884d8" name="Posición" />
-                  <Line type="monotone" dataKey="sentiment" stroke="#82ca9d" name="Sentimiento" />
+                  <Line 
+                    yAxisId="left"
+                    type="monotone" 
+                    dataKey="position" 
+                    stroke="#8884d8" 
+                    name="Posición" 
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="sentiment" 
+                    stroke="#82ca9d" 
+                    name="Sentimiento" 
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </Box>

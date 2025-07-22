@@ -5,7 +5,8 @@ import {
   Button, 
   CircularProgress,
   FormControlLabel,
-  Switch
+  Switch,
+  Grid
 } from '@mui/material'
 import { QuestionAnswer, Send } from '@mui/icons-material'
 
@@ -48,30 +49,34 @@ function QueryForm({
 
       {/* Form */}
       <Box component="form" onSubmit={onSubmit} sx={{ mt: 3 }}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Tu Pregunta"
-          variant="outlined"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          required
-          sx={{ mb: 3 }}
-          placeholder="¿Qué te gustaría saber?"
-        />
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ maxWidth: '600px', width: '100%' }}>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Tu Pregunta"
+              variant="outlined"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              required
+              placeholder="¿Qué te gustaría saber?"
+              sx={{ mb: 3 }}
+            />
+            
+            <TextField
+              fullWidth
+              label="Marca para analizar (Opcional)"
+              variant="outlined"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              placeholder="Ingresa el nombre de la marca..."
+              sx={{ mb: 3 }}
+            />
+          </Box>
+        </Box>
 
-        <TextField
-          fullWidth
-          label="Marca para analizar (Opcional)"
-          variant="outlined"
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
-          sx={{ mb: 4 }}
-          placeholder="Ingresa el nombre de la marca..."
-        />
-
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
           <FormControlLabel
             control={
               <Switch
@@ -102,33 +107,36 @@ function QueryForm({
           />
         </Box>
 
-        <Button
-          type="submit"
-          fullWidth
-          variant="contained"
-          size="large"
-          disabled={isSubmitting || !question.trim()}
-          startIcon={
-            isSubmitting ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              <Send />
-            )
-          }
-          sx={{
-            py: 1.5,
-            textTransform: 'none',
-            fontSize: '1rem',
-            fontWeight: 600
-          }}
-        >
-          {isSubmitting 
-            ? 'Procesando...' 
-            : searchSimilarQuestions 
-              ? 'Buscar Preguntas Similares' 
-              : 'Hacer Pregunta'
-          }
-        </Button>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={isSubmitting || !question.trim()}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <Send />
+              )
+            }
+            sx={{
+              py: 1.5,
+              textTransform: 'none',
+              fontSize: '1rem',
+              fontWeight: 600,
+              maxWidth: '600px',
+              width: '100%'
+            }}
+          >
+            {isSubmitting 
+              ? 'Procesando...' 
+              : searchSimilarQuestions 
+                ? 'Buscar Preguntas Similares' 
+                : 'Hacer Pregunta'
+            }
+          </Button>
+        </Box>
       </Box>
     </Box>
   )
