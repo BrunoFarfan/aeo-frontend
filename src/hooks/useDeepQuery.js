@@ -6,8 +6,8 @@
  */
 export const deepQuery = async (question, brand = '') => {
   try {
-    // const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
-    const backendUrl = 'http://localhost:8000/api/v1'
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
+    // const backendUrl = 'http://localhost:8000/api/v1'
     const response = await fetch(`${backendUrl}/deep_query`, {
       method: 'POST',
       headers: {
