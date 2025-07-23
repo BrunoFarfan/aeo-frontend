@@ -7,6 +7,7 @@
 export const deepQuery = async (question, brand = '') => {
   try {
     const backendUrl = import.meta.env.VITE_BACKEND_URL
+    console.log(backendUrl)
     const response = await fetch(`${backendUrl}/deep_query`, {
       method: 'POST',
       headers: {
