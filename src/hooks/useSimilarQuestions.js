@@ -6,7 +6,7 @@
  */
 export const similarQuestions = async (question, brand = '') => {
   try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL
+    const backendUrl = 'https://aeo-backend-984142772119.us-central1.run.app/api/v1'
     const response = await fetch(`${backendUrl}/similar_questions`, {
       method: 'POST',
       headers: {
