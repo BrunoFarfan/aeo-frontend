@@ -104,6 +104,7 @@ function BrandFocusAnalysis({ currentResult, similarPreviousResults, brand }) {
               linkCount: brandItem.link_count,
               question: historicalResult.question,
               similarity: historicalResult.similarity_score,
+              created_at: historicalResult.created_at,
               totalMentions,
               brandMentionPercentage: (1 / totalMentions * 100)
             })
@@ -154,14 +155,53 @@ function BrandFocusAnalysis({ currentResult, similarPreviousResults, brand }) {
 
   // Historical trend data (if multiple historical entries)
   const historicalTrendData = historicalBrandData.length > 0 
-    ? historicalBrandData
-        .sort((a, b) => a.similarity - b.similarity)
-        .map((item, index) => ({
-          index: index + 1,
-          position: item.position,
-          sentiment: item.sentiment,
-          similarity: (item.similarity * 100).toFixed(1)
-        }))
+    ? (() => {
+        // Group by question (using created_at as unique identifier)
+        const groupedData = historicalBrandData.reduce((acc, item) => {
+          const questionKey = item.created_at
+          if (!acc[questionKey]) {
+            acc[questionKey] = {
+              created_at: item.created_at,
+              question: item.question,
+              similarity: item.similarity,
+              positions: [],
+              sentiments: [],
+              models: []
+            }
+          }
+          acc[questionKey].positions.push(item.position)
+          acc[questionKey].sentiments.push(item.sentiment)
+          acc[questionKey].models.push(item.model)
+          return acc
+        }, {})
+        
+        // Convert to array and sort by similarity
+        return Object.values(groupedData)
+          .sort((a, b) => a.similarity - b.similarity)
+          .map((questionData, index) => {
+            // Calculate averages
+            const avgPosition = questionData.positions.reduce((sum, pos) => sum + pos, 0) / questionData.positions.length
+            const avgSentiment = questionData.sentiments.reduce((sum, sent) => sum + sent, 0) / questionData.sentiments.length
+            
+            // Format the creation date
+            const date = new Date(questionData.created_at)
+            const formattedDate = date.toLocaleDateString('es-ES', {
+              day: '2-digit',
+              month: '2-digit',
+              year: '2-digit'
+            })
+            
+            return {
+              id: `point-${index}`,
+              index: index + 1,
+              date: formattedDate,
+              position: avgPosition,
+              sentiment: avgSentiment,
+              similarity: (questionData.similarity * 100).toFixed(1),
+              models: questionData.models.join(', ')
+            }
+          })
+      })()
     : []
 
 
@@ -425,45 +465,57 @@ function BrandFocusAnalysis({ currentResult, similarPreviousResults, brand }) {
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                 Tendencia Histórica
               </Typography>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={historicalTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="index" />
-                  <YAxis 
-                    yAxisId="left" 
-                    domain={[1, 5]} 
-                    reversed={true}
-                    label={{ value: 'Posición', angle: -90, position: 'center', offset: 10 }}
-                    tick={{ fontSize: 12 }}
-                    width={70}
-                  />
-                  <YAxis 
-                    yAxisId="right" 
-                    orientation="right" 
-                    domain={[0, 1]} 
-                    label={{ value: 'Sentimiento', angle: 90, position: 'center', offset: 10 }}
-                    tick={{ fontSize: 12 }}
-                    width={90}
-                  />
-                  <Tooltip />
-                  <Line 
-                    yAxisId="left"
-                    type="monotone" 
-                    dataKey="position" 
-                    stroke="#8884d8" 
-                    name="Posición" 
-                    strokeWidth={2}
-                  />
-                  <Line 
-                    yAxisId="right"
-                    type="monotone" 
-                    dataKey="sentiment" 
-                    stroke="#82ca9d" 
-                    name="Sentimiento" 
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+                              <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={historicalTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="index" 
+                      tickFormatter={(value, index) => historicalTrendData[index]?.date || value}
+                    />
+                    <YAxis 
+                      yAxisId="left" 
+                      domain={[1, 5]} 
+                      reversed={true}
+                      label={{ value: 'Posición', angle: -90, position: 'center', offset: 10 }}
+                      tick={{ fontSize: 12 }}
+                      width={70}
+                    />
+                    <YAxis 
+                      yAxisId="right" 
+                      orientation="right" 
+                      domain={[0, 1]} 
+                      label={{ value: 'Sentimiento', angle: 90, position: 'center', offset: 10 }}
+                      tick={{ fontSize: 12 }}
+                      width={90}
+                    />
+                    <Tooltip 
+                      cursor={{ strokeDasharray: '3 3' }}
+                      contentStyle={{ backgroundColor: 'white', border: '1px solid #ccc' }}
+                      labelFormatter={(value, payload) => {
+                        const dataPoint = historicalTrendData[value - 1]
+                        return dataPoint ? `${dataPoint.date} (${dataPoint.models})` : value
+                      }}
+                    />
+                    <Line 
+                      yAxisId="left"
+                      type="monotone" 
+                      dataKey="position" 
+                      stroke="#8884d8" 
+                      name="Posición" 
+                      strokeWidth={2}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                    />
+                    <Line 
+                      yAxisId="right"
+                      type="monotone" 
+                      dataKey="sentiment" 
+                      stroke="#82ca9d" 
+                      name="Sentimiento" 
+                      strokeWidth={2}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
             </Box>
           )}
         </Paper>

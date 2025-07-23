@@ -136,6 +136,7 @@ function BrandAggregation({ brandAggregation, chartData, activeTab, onTabChange,
                           }
                         })
                         .sort((a, b) => a.avgPosition - b.avgPosition) // Sort by average position (best first)
+                        .slice(0, 15) // Limit to top 15 entries
                         .map(({ brandName, count, avgPosition, avgSentiment, totalLinks, models }) => (
                           <TableRow key={brandName}>
                             <TableCell sx={{ fontWeight: 600 }}>{brandName}</TableCell>
@@ -211,6 +212,7 @@ function BrandAggregation({ brandAggregation, chartData, activeTab, onTabChange,
                           }
                         })
                         .sort((a, b) => a.avgPosition - b.avgPosition) // Sort by average position (best first)
+                        .slice(0, 15) // Limit to top 15 entries
                         .map(({ brandName, count, avgPosition, avgSentiment, totalLinks, questionsCount }) => (
                           <TableRow key={brandName}>
                             <TableCell sx={{ fontWeight: 600 }}>{brandName}</TableCell>
